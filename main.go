@@ -21,14 +21,19 @@ type User struct {
 
 var client *mongo.Client
 
+func initialize(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func main() {
 	fmt.Println("Starting the app...")
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	// client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 
 	//Set router
-	http.HandleFunc("/", nil)
+	http.HandleFunc("/", initialize)
 
 	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
