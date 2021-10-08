@@ -1,2 +1,2 @@
-# Backend API using GoLang and MongoDB
+# Instagram Backend API using GoLang and MongoDB
 Appointy tech internship task
