@@ -27,10 +27,10 @@ type User struct {
 
 //New post structure
 type PostPic struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Caption   string             `json:"caption,omitempty" bson:"caption,omitempty"`
-	Imgurl    string             `json:"imgurl,omitempty" bson:"imgurl,omitempty"`
-	Timestamp string             `json:"timestamp,omitempty" bson:"timestamp,omitempty"`
+	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+	Caption   string              `json:"caption,omitempty" bson:"caption,omitempty"`
+	Imgurl    string              `json:"imgurl,omitempty" bson:"imgurl,omitempty"`
+	Timestamp primitive.Timestamp `json:"timestamp,omitempty" bson:"timestamp,omitempty"`
 }
 
 //Convert string password to hash value
@@ -59,7 +59,7 @@ func CreateUser(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(result)
 }
 
-func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
+func GetOneUser(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	params := mux.Vars(request)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
@@ -75,7 +75,7 @@ func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(person)
 }
 
-func GetPersonEndpoint(response http.ResponseWriter, request *http.Request) {
+func GetAllUsers(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var people []User
 	collection := client.Database("instagram").Collection("users")
@@ -114,11 +114,11 @@ func main() {
 	//Add a new user
 	router.HandleFunc("/users", CreateUser).Methods("POST")
 
-	//
-	router.HandleFunc("/accounts", GetPeopleEndpoint).Methods("GET")
+	//Get a user using id
+	router.HandleFunc("/users/{id}", GetOneUser).Methods("GET")
 
-	//
-	router.HandleFunc("/users/{id}", GetPersonEndpoint).Methods("GET")
+	//List all users
+	router.HandleFunc("/users", GetAllUsers).Methods("GET")
 
 	//Start http server on port 9090
 	http.ListenAndServe(":9090", router)
