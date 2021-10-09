@@ -66,6 +66,7 @@ func CreateUser(response http.ResponseWriter, request *http.Request) {
 	getid(response, request)
 }
 
+//Update u_id global variable to latest user id
 func getid(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 
