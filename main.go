@@ -42,6 +42,7 @@ func getHash(pwd []byte) string {
 	return string(hash)
 }
 
+//Create a new user
 func CreateUser(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 
@@ -51,7 +52,7 @@ func CreateUser(response http.ResponseWriter, request *http.Request) {
 	//Securely store password
 	user.Password = getHash([]byte(user.Password))
 
-	//DB name : instagram, collection name : accounts
+	//DB name : instagram, collection name : users
 	collection := client.Database("instagram").Collection("users")
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
@@ -59,6 +60,7 @@ func CreateUser(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(result)
 }
 
+//Get details of one user
 func GetOneUser(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	params := mux.Vars(request)
@@ -75,10 +77,69 @@ func GetOneUser(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(person)
 }
 
-func GetAllUsers(response http.ResponseWriter, request *http.Request) {
+//Get list of all users
+// func GetAllUsers(response http.ResponseWriter, request *http.Request) {
+// 	response.Header().Set("content-type", "application/json")
+// 	var people []User
+// 	collection := client.Database("instagram").Collection("users")
+// 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+// 	cursor, err := collection.Find(ctx, bson.M{})
+// 	if err != nil {
+// 		response.WriteHeader(http.StatusInternalServerError)
+// 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+// 		return
+// 	}
+// 	defer cursor.Close(ctx)
+// 	for cursor.Next(ctx) {
+// 		var user User
+// 		cursor.Decode(&user)
+// 		people = append(people, user)
+// 	}
+// 	if err := cursor.Err(); err != nil {
+// 		response.WriteHeader(http.StatusInternalServerError)
+// 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+// 		return
+// 	}
+// 	json.NewEncoder(response).Encode(people)
+// }
+
+//Create post
+func CreatePost(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
-	var people []User
-	collection := client.Database("instagram").Collection("users")
+
+	var post PostPic
+	_ = json.NewDecoder(request.Body).Decode(&post)
+
+	//DB name : instagram, collection name : posts
+	collection := client.Database("instagram").Collection("posts")
+
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	result, _ := collection.InsertOne(ctx, post)
+	json.NewEncoder(response).Encode(result)
+}
+
+//Get a post using id
+func GetOnePost(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("content-type", "application/json")
+	params := mux.Vars(request)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	var post PostPic
+	collection := client.Database("instagram").Collection("posts")
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	err := collection.FindOne(ctx, PostPic{ID: id}).Decode(&post)
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+	json.NewEncoder(response).Encode(post)
+}
+
+//List all posts of a user
+func GetAllPosts(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("content-type", "application/json")
+	var posts []PostPic
+	collection := client.Database("instagram").Collection("post")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
@@ -88,16 +149,16 @@ func GetAllUsers(response http.ResponseWriter, request *http.Request) {
 	}
 	defer cursor.Close(ctx)
 	for cursor.Next(ctx) {
-		var user User
-		cursor.Decode(&user)
-		people = append(people, user)
+		var pic PostPic
+		cursor.Decode(&pic)
+		posts = append(posts, pic)
 	}
 	if err := cursor.Err(); err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
-	json.NewEncoder(response).Encode(people)
+	json.NewEncoder(response).Encode(posts)
 }
 
 func main() {
