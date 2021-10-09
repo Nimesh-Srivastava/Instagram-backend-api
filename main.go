@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type User struct {
@@ -31,10 +30,12 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 	json.NewDecoder(request.Body).Decode(&U)
 
 	collection := client.Database("instagram").Collection("users")
+
 	ctx, err_ctx := context.WithTimeout(context.Background(), 10*time.Second)
 	if err_ctx != nil {
-		log.Fatal("ListenAndServe: ", err_ctx)
+		log.Fatal("context_error_createUser: ", err_ctx)
 	}
+
 	result, _ := collection.InsertOne(ctx, U)
 	json.NewEncoder(response).Encode(result)
 }
@@ -42,12 +43,15 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 func main() {
 	fmt.Println("App started...")
 
-	ctx, err_ctx := context.WithTimeout(context.Background(), 10*time.Second)
-	if err_ctx != nil {
-		log.Fatal("ListenAndServe: ", err_ctx)
-	}
-	// client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	// ctx := context.Background()
+	// ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	// if err != nil {
+	// 	log.Fatal("context_error_main: ", err)
+	// }
+
+	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	// client, _ := mongo.Connect(ctx, clientOptions)
+	// _ = client
 
 	//Set router
 	router := mux.NewRouter()
@@ -55,8 +59,5 @@ func main() {
 	//Create a user
 	router.HandleFunc("/user", createUser).Methods("POST")
 
-	err := http.ListenAndServe(":1234", router)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+	http.ListenAndServe(":9090", router)
 }
