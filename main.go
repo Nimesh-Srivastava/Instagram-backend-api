@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type User struct {
@@ -18,6 +18,13 @@ type User struct {
 	Name  string             `json:"name,omitempty" bson:"name,omitempty"`
 	Email string             `json:"email,omitempty" bson:"email,omitempty"`
 	Pswd  string             `json:"pswd,omitempty" bson:"pswd,omitempty"`
+}
+
+type Post struct {
+	Id        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Caption   string             `json:"caption,omitempty" bson:"caption,omitempty"`
+	Imgurl    string             `json:"imgurl,omitempty" bson:"imgurl,omitempty"`
+	Timestamp string             `json:"timestamp,omitempty" bson:"timestamp,omitempty"`
 }
 
 var client *mongo.Client
@@ -31,10 +38,11 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 
 	collection := client.Database("instagram").Collection("users")
 
-	ctx, err_ctx := context.WithTimeout(context.Background(), 10*time.Second)
-	if err_ctx != nil {
-		log.Fatal("context_error_createUser: ", err_ctx)
-	}
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, 5*time.Second)
+	// if err_ctx != nil {
+	// 	log.Fatal("context_error_createUser: ", err_ctx)
+	// }
 
 	result, _ := collection.InsertOne(ctx, U)
 	json.NewEncoder(response).Encode(result)
@@ -43,15 +51,15 @@ func createUser(response http.ResponseWriter, request *http.Request) {
 func main() {
 	fmt.Println("App started...")
 
-	// ctx := context.Background()
-	// ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, 3*time.Second)
 	// if err != nil {
 	// 	log.Fatal("context_error_main: ", err)
 	// }
 
-	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	// client, _ := mongo.Connect(ctx, clientOptions)
-	// _ = client
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, _ := mongo.Connect(ctx, clientOptions)
+	_ = client
 
 	//Set router
 	router := mux.NewRouter()
