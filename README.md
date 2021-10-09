@@ -1,9 +1,9 @@
 # Instagram Backend API using GoLang and MongoDB
 
 ![Language](https://img.shields.io/badge/Language-GO-blue.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
-![IDE](https://img.shields.io/badge/IDE-VSCode-purple.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
+![Testing](https://img.shields.io/badge/Testing-Postman-orange.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
 ![DB](https://img.shields.io/badge/DB-MongoDB-green.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
-![Type](https://img.shields.io/badge/Type-RestfulAPI-red.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
+![Type](https://img.shields.io/badge/Type-RestfulAPI-brown.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
 
 <br>
 
