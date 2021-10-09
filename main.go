@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,6 +15,9 @@ import (
 )
 
 var client *mongo.Client
+
+//Declare global variable to identify posts of specific users
+var u_id primitive.ObjectID
 
 //New user structure
 type User struct {
@@ -27,10 +29,11 @@ type User struct {
 
 //New post structure
 type PostPic struct {
-	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	Caption   string              `json:"caption,omitempty" bson:"caption,omitempty"`
-	Imgurl    string              `json:"imgurl,omitempty" bson:"imgurl,omitempty"`
-	Timestamp primitive.Timestamp `json:"timestamp,omitempty" bson:"timestamp,omitempty"`
+	ID      primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+	Posted  primitive.Timestamp `json:"posted,omitempty" bson:"posted,omitempty"`
+	Userid  primitive.ObjectID  `json:"userid,omitempty" bson:"userid,omitempty"`
+	Caption string              `json:"caption,omitempty" bson:"caption,omitempty"`
+	Imgurl  string              `json:"imgurl,omitempty" bson:"imgurl,omitempty"`
 }
 
 //Convert string password to hash value
@@ -55,6 +58,9 @@ func CreateUser(response http.ResponseWriter, request *http.Request) {
 	//DB name : instagram, collection name : users
 	collection := client.Database("instagram").Collection("users")
 
+	//Update current user id
+	u_id = user.ID
+
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	result, _ := collection.InsertOne(ctx, user)
 	json.NewEncoder(response).Encode(result)
@@ -65,43 +71,17 @@ func GetOneUser(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	params := mux.Vars(request)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
-	var person User
+	var user User
 	collection := client.Database("instagram").Collection("users")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	err := collection.FindOne(ctx, User{ID: id}).Decode(&person)
+	err := collection.FindOne(ctx, User{ID: id}).Decode(&user)
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
-	json.NewEncoder(response).Encode(person)
+	json.NewEncoder(response).Encode(user)
 }
-
-//Get list of all users
-// func GetAllUsers(response http.ResponseWriter, request *http.Request) {
-// 	response.Header().Set("content-type", "application/json")
-// 	var people []User
-// 	collection := client.Database("instagram").Collection("users")
-// 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-// 	cursor, err := collection.Find(ctx, bson.M{})
-// 	if err != nil {
-// 		response.WriteHeader(http.StatusInternalServerError)
-// 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
-// 		return
-// 	}
-// 	defer cursor.Close(ctx)
-// 	for cursor.Next(ctx) {
-// 		var user User
-// 		cursor.Decode(&user)
-// 		people = append(people, user)
-// 	}
-// 	if err := cursor.Err(); err != nil {
-// 		response.WriteHeader(http.StatusInternalServerError)
-// 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
-// 		return
-// 	}
-// 	json.NewEncoder(response).Encode(people)
-// }
 
 //Create post
 func CreatePost(response http.ResponseWriter, request *http.Request) {
@@ -109,6 +89,8 @@ func CreatePost(response http.ResponseWriter, request *http.Request) {
 
 	var post PostPic
 	_ = json.NewDecoder(request.Body).Decode(&post)
+
+	post.Userid = u_id
 
 	//DB name : instagram, collection name : posts
 	collection := client.Database("instagram").Collection("posts")
@@ -135,13 +117,17 @@ func GetOnePost(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(post)
 }
 
-//List all posts of a user
+//List all posts of a user using userid
 func GetAllPosts(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(request)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	var posts []PostPic
 	collection := client.Database("instagram").Collection("post")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	cursor, err := collection.Find(ctx, bson.M{})
+	cursor, err := collection.Find(ctx, PostPic{Userid: id})
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
@@ -152,6 +138,7 @@ func GetAllPosts(response http.ResponseWriter, request *http.Request) {
 		var pic PostPic
 		cursor.Decode(&pic)
 		posts = append(posts, pic)
+
 	}
 	if err := cursor.Err(); err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
@@ -172,14 +159,20 @@ func main() {
 	//Define router
 	router := mux.NewRouter()
 
-	//Add a new user
+	//Create a user
 	router.HandleFunc("/users", CreateUser).Methods("POST")
 
 	//Get a user using id
 	router.HandleFunc("/users/{id}", GetOneUser).Methods("GET")
 
-	//List all users
-	router.HandleFunc("/users", GetAllUsers).Methods("GET")
+	//Create a post
+	router.HandleFunc("/posts", CreatePost).Methods("POST")
+
+	//Get post using id
+	router.HandleFunc("/posts/{id}", GetOnePost).Methods("GET")
+
+	//List all posts of a user
+	router.HandleFunc("/posts/users/{id}", GetAllPosts).Methods("GET")
 
 	//Start http server on port 9090
 	http.ListenAndServe(":9090", router)
