@@ -31,7 +31,7 @@ There is never more than one simultaneous call to function throughout the api, h
 
 <br>
 
-## 💢 API testing
+## 💢 API testing (using PostMan API platform)
 The entire api has been tested using *Postman* API platform. Some screenshots are attached below for reference :<br>
 <br>
 
