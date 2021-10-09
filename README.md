@@ -1,5 +1,9 @@
 # Instagram Backend API using GoLang and MongoDB
+
+Developed using : ![Language](https://img.shields.io/badge/Language-GO-blue.svg?style=for-the-badge&logo=appveyor)&nbsp;&nbsp;
+
 Appointy tech internship task
+
 
 The complete api is covered in `main.go` file. The api works for all endpoints that were mentioned int the task.
 
