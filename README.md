@@ -7,4 +7,5 @@ Passwords have been securely stored on the server using `bcrypt` golang default 
 
 There is never more than one simultaneous call to function throughout the api, hence, thread safety is ensured.
 
-The entire 
+The entire api has been tested using *Postman* API platform. Some screenshots are attached below for reference :<br>
+
