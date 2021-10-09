@@ -3,7 +3,10 @@ Appointy tech internship task
 
 The complete api is covered in `main.go` file. The api works for all endpoints that were mentioned int the task.
 
-Before running the application, please ensure 
+⚠️ Before running the application, please ensure you have the following packages installed :
+* Mongodb for system [Refer this link](https://docs.mongodb.com/manual/installation/)
+* GoLang for system [Refer this link](https://golang.org/doc/install)
+* Gorilla MUX [Refer this link](https://github.com/gorilla/mux)
 
 Passwords have been securely stored on the server using `bcrypt` golang default package. This ensures that passwords cannot be reverse engineered by anyone.
 
